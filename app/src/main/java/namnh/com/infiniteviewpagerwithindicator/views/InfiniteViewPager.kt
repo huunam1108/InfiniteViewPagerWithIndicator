@@ -6,13 +6,16 @@ import android.os.Handler
 import android.support.v4.view.PagerAdapter
 import android.support.v4.view.ViewPager
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import namnh.com.infiniteviewpagerwithindicator.R
 
-private const val DEFAULT_AUTO_SCROLL_INTERVAL = 2000
-
 class InfiniteViewPager : ViewPager {
+
+    companion object {
+        private const val DEFAULT_AUTO_SCROLL_INTERVAL = 2000
+    }
 
     constructor(context: Context) : this(context, null)
 
@@ -25,11 +28,11 @@ class InfiniteViewPager : ViewPager {
     private var autoScrollInterval: Long = 0
     private val autoScrollHandler = Handler()
     private var hasAlreadyPosted: Boolean = false
-    private var lastDiff: Int = 0
+    // The last different between current selected virtual position and real position
+    private var lastDiffPosition: Int = 0
     // allow for 100 back cycles from the beginning
     // should be enough to create an illusion of infinity
-    // warning: scrolling to very high values (1,000,000+) results in
-    // strange drawing behaviour
+    // warning: scrolling to very high values (1,000,000+) results in strange drawing behaviour
     private val offsetAmount: Int
         get() {
             return when {
@@ -42,7 +45,7 @@ class InfiniteViewPager : ViewPager {
             }
         }
 
-    private val runnable = object : Runnable {
+    private val autoScrollRunnable = object : Runnable {
         override fun run() {
             setCurrentItem(currentItem + 1, !autoScroll)
             autoScrollHandler.postDelayed(this, autoScrollInterval)
@@ -92,7 +95,7 @@ class InfiniteViewPager : ViewPager {
             autoScroll = a.getBoolean(R.styleable.InfiniteViewPager_autoScroll, false)
             autoSmoothScroll = a.getBoolean(R.styleable.InfiniteViewPager_autoSmoothScroll, false)
             autoScrollInterval = a.getInt(R.styleable.InfiniteViewPager_autoScrollInterval,
-                DEFAULT_AUTO_SCROLL_INTERVAL).toLong()
+                    DEFAULT_AUTO_SCROLL_INTERVAL).toLong()
             a.recycle()
         }
         addOnPageChangeListener(object : OnPageChangeListener {
@@ -100,18 +103,18 @@ class InfiniteViewPager : ViewPager {
             }
 
             override fun onPageScrolled(position: Int, positionOffset: Float,
-                positionOffsetPixels: Int) {
+                                        positionOffsetPixels: Int) {
             }
 
             override fun onPageSelected(position: Int) {
-                lastDiff = position - offsetAmount
+                lastDiffPosition = position - offsetAmount
             }
         })
     }
 
     private fun checkAndResumeAutoScroll() {
         if (!autoScroll && !autoSmoothScroll || hasAlreadyPosted) return
-        autoScrollHandler.postDelayed(runnable, autoScrollInterval)
+        autoScrollHandler.postDelayed(autoScrollRunnable, autoScrollInterval)
         hasAlreadyPosted = true
 
     }
@@ -140,11 +143,12 @@ class InfiniteViewPager : ViewPager {
             super.setCurrentItem(tempPos, smoothScroll)
             return
         }
-        tempPos = if (lastDiff > position) {
-            offsetAmount + lastDiff + 1
+        tempPos = if (lastDiffPosition > position) {
+            offsetAmount + lastDiffPosition + 1
         } else
             offsetAmount + position % adapter!!.count
-        lastDiff = tempPos - offsetAmount
+        lastDiffPosition = tempPos - offsetAmount
+
         super.setCurrentItem(tempPos, smoothScroll)
     }
 

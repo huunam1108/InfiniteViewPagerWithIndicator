@@ -25,7 +25,7 @@ open class ViewPagerIndicator : LinearLayout, ViewPager.OnPageChangeListener, Vi
     }
 
     constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs,
-        defStyleAttr) {
+            defStyleAttr) {
         initializeViews(context, attrs)
     }
 
@@ -47,6 +47,7 @@ open class ViewPagerIndicator : LinearLayout, ViewPager.OnPageChangeListener, Vi
     private var animScaleMultiplier = 1.5f
     private var isAnimate = false
 
+    // Listen the adapter data set change to update the indicators
     private val dataSetObserver = object : DataSetObserver() {
         override fun onChanged() {
             super.onChanged()
@@ -89,19 +90,19 @@ open class ViewPagerIndicator : LinearLayout, ViewPager.OnPageChangeListener, Vi
         attrs?.let {
             val a = context.obtainStyledAttributes(it, R.styleable.ViewPagerIndicator)
             selectedColor = a.getColor(R.styleable.ViewPagerIndicator_selectedColor,
-                getThemeColor(R.attr.colorAccent))
+                    getThemeColor(R.attr.colorAccent))
             normalColor = a.getColor(R.styleable.ViewPagerIndicator_deselectedColor,
-                Color.LTGRAY)
+                    Color.LTGRAY)
             selectedDrawable = a.getResourceId(R.styleable.ViewPagerIndicator_selectedDrawable, -1)
             normalDrawable = a.getResourceId(R.styleable.ViewPagerIndicator_deselectedDrawable,
-                -1)
+                    -1)
             indicatorSpacing = a.getDimension(R.styleable.ViewPagerIndicator_indicatorSpacing,
-                5f).toInt()
+                    5f).toInt()
             isAnimate = a.getBoolean(R.styleable.ViewPagerIndicator_enableAnimation, false)
             animationDuration = a.getInteger(R.styleable.ViewPagerIndicator_animationDuration, 150)
             animScaleMultiplier = a.getFloat(R.styleable.ViewPagerIndicator_animationScale, 1.5f)
             backgroundColorCustom = a.getColor(R.styleable.ViewPagerIndicator_backgroundColor,
-                Color.TRANSPARENT)
+                    Color.TRANSPARENT)
             a.recycle()
         }
 
@@ -123,13 +124,20 @@ open class ViewPagerIndicator : LinearLayout, ViewPager.OnPageChangeListener, Vi
             img.tag = i
 
             val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT)
+                    LinearLayout.LayoutParams.WRAP_CONTENT)
             lp.setMargins(indicatorSpacing / 2, 0, indicatorSpacing / 2, 0)
             lp.gravity = Gravity.CENTER_VERTICAL or Gravity.CENTER_HORIZONTAL
             addView(img, lp)
         }
 
-        setSelectedIndicator(viewPager?.currentItem ?: 0)
+        viewPager?.let {
+            if (it.adapter is InfinitePagerAdapter) {
+                val realPos = it.currentItem % (it.adapter as InfinitePagerAdapter).realCount
+                setSelectedIndicator(realPos)
+            } else {
+                setSelectedIndicator(it.currentItem)
+            }
+        }
     }
 
     private fun setSelectedIndicator(selected: Int) {
@@ -143,10 +151,10 @@ open class ViewPagerIndicator : LinearLayout, ViewPager.OnPageChangeListener, Vi
                     it.clearAnimation()
 
                     it.animate()
-                        .scaleX(1f)
-                        .scaleY(1f)
-                        .setDuration(animationDuration.toLong())
-                        .start()
+                            .scaleX(1f)
+                            .scaleY(1f)
+                            .setDuration(animationDuration.toLong())
+                            .start()
                 }
 
                 it.clearColorFilter()
@@ -169,10 +177,10 @@ open class ViewPagerIndicator : LinearLayout, ViewPager.OnPageChangeListener, Vi
         selectedView?.let {
             if (isAnimate) {
                 it.animate()
-                    .scaleX(animScaleMultiplier)
-                    .scaleY(animScaleMultiplier)
-                    .setDuration(animationDuration.toLong())
-                    .start()
+                        .scaleX(animScaleMultiplier)
+                        .scaleY(animScaleMultiplier)
+                        .setDuration(animationDuration.toLong())
+                        .start()
             }
 
             if (selectedDrawable != -1) {
@@ -190,16 +198,18 @@ open class ViewPagerIndicator : LinearLayout, ViewPager.OnPageChangeListener, Vi
     override fun onPageScrollStateChanged(state: Int) {}
 
     override fun onPageSelected(position: Int) {
-        if (viewPager?.adapter is InfinitePagerAdapter) {
-            val realPos = position % (viewPager?.adapter as InfinitePagerAdapter).realCount
-            setSelectedIndicator(realPos)
-        } else {
-            setSelectedIndicator(position)
+        viewPager?.let {
+            if (it.adapter is InfinitePagerAdapter) {
+                val realPos = position % (it.adapter as InfinitePagerAdapter).realCount
+                setSelectedIndicator(realPos)
+            } else {
+                setSelectedIndicator(position)
+            }
         }
     }
 
     override fun onAdapterChanged(viewPager: ViewPager, oldAdapter: PagerAdapter?,
-        newAdapter: PagerAdapter?) {
+                                  newAdapter: PagerAdapter?) {
         oldAdapter?.unregisterDataSetObserver(dataSetObserver)
         newAdapter?.let {
             if (it is InfinitePagerAdapter) {

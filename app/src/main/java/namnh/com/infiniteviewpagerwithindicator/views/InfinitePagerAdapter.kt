@@ -20,22 +20,22 @@ class InfinitePagerAdapter(private val adapter: PagerAdapter) : PagerAdapter() {
         // strange drawing behaviour
     }
 
-    override fun instantiateItem(container: ViewGroup, position: Int): Any {
-        val virtualPosition = position % realCount
+    override fun instantiateItem(container: ViewGroup, virtualposition: Int): Any {
+        val realPosition = virtualposition % realCount
         Log.d(
-            TAG, "$TAG instantiateItem position: $position  + $virtualPosition")
+                TAG, "$TAG instantiateItem position: $virtualposition  +  $realPosition")
 
-        // only expose virtual position to the inner adapter
-        return adapter.instantiateItem(container, virtualPosition)
+        // only expose real Position to the inner adapter
+        return adapter.instantiateItem(container, realPosition)
     }
 
-    override fun destroyItem(container: ViewGroup, position: Int, item: Any) {
-        val virtualPosition = position % realCount
+    override fun destroyItem(container: ViewGroup, virtualposition: Int, item: Any) {
+        val realPosition = virtualposition % realCount
         Log.d(
-            TAG, "$TAG destroyItem position: $position  + $virtualPosition")
+                TAG, "$TAG destroyItem position: $virtualposition  + $realPosition")
 
-        // only expose virtual position to the inner adapter
-        adapter.destroyItem(container, virtualPosition, item)
+        // only expose real Position to the inner adapter
+        adapter.destroyItem(container, realPosition, item)
     }
 
     /*

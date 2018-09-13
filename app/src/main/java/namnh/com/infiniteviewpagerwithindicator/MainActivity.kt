@@ -10,18 +10,19 @@ import namnh.com.infiniteviewpagerwithindicator.views.InfiniteViewPager
 import namnh.com.infiniteviewpagerwithindicator.views.ViewPagerIndicator
 
 class MainActivity : AppCompatActivity() {
+    // Create a simple normal pager adapter
     private val adapter = object : FragmentPagerAdapter(supportFragmentManager) {
-        var colours = intArrayOf(Color.CYAN, Color.GRAY, Color.MAGENTA, Color.LTGRAY,
-            Color.GREEN, Color.WHITE, Color.YELLOW)
+        var colors = intArrayOf(Color.CYAN, Color.GRAY, Color.MAGENTA, Color.LTGRAY,
+                Color.GREEN, Color.WHITE, Color.YELLOW)
 
         override fun getCount(): Int {
-            return colours.size
+            return colors.size
         }
 
         override fun getItem(position: Int): Fragment {
             val fragment = ColorFragment()
             val args = Bundle()
-            args.putInt("color", colours[position])
+            args.putInt("color", colors[position])
             args.putInt("identifier", position)
             fragment.arguments = args
             return fragment
@@ -32,14 +33,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-
-        // wrap pager to provide infinite paging with wrap-around
+        // make your normal pager adapter to infinity pager adapter
         val wrappedAdapter = InfinitePagerAdapter(adapter)
-
-        // actually an InfiniteViewPager
+        // setup wrapped infinity pager adapter to the InfiniteViewPager
         val viewPager = findViewById<InfiniteViewPager>(R.id.pager)
         viewPager.adapter = wrappedAdapter
-
+        // setup the indicator for the InfiniteViewPager
         val viewPagerIndicator = findViewById<ViewPagerIndicator>(R.id.pager_indicator)
         viewPagerIndicator.setPager(viewPager)
     }
